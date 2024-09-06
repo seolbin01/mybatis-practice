@@ -57,25 +57,33 @@
              , production_status
           FROM product_info
         <where>
-            <if test="condition == 'productName'">
-                product_name LIKE CONCAT('%', #{ value }, '%')
-            </if>
-            <if test="condition == 'salesStore'">
-                <choose>
-                    <when test="value == '백화점'">
-                        discount_rate = 0
-                    </when>
-                    <when test="value == '아울렛'">
-                        discount_rate > 0
-                    </when>
-                </choose>
-            </if>
-            <if test="condition == 'newProduct'">
-                LEFT(RELEASE_DATE, 6) = LEFT(DATE_FORMAT(NOW(), '%Y%m%d'), 6)
-            </if>
-            <if test="condition == 'nonProduction'">
-                production_status = 'N'
-            </if>
+            <choose>
+                <when test="condition == 'productName'">
+                    product_name LIKE CONCAT('%', #{ value }, '%')
+                </when>
+                <when test="condition == 'salesStore'">
+                    <choose>
+                        <when test="value == '백화점'">
+                            discount_rate = 0
+                        </when>
+                        <when test="value == '아울렛'">
+                            discount_rate > 0
+                        </when>
+                        <otherwise>
+                            discount_rate is null
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="condition == 'newProduct'">
+                    LEFT(RELEASE_DATE, 6) = LEFT(DATE_FORMAT(NOW(), '%Y%m%d'), 6)
+                </when>
+                <when test="condition == 'nonProduction'">
+                    production_status = 'N'
+                </when>
+                <otherwise>
+                    1 = 2
+                </otherwise>
+            </choose>
         </where>
     </select>
 
@@ -83,9 +91,11 @@
             (쿼리id) insertProduct -->
     <insert id="insertProduct" parameterType="com.management.product.model.dto.ProductDTO">
         INSERT INTO
-            product_info (product_code, product_name, origin_cost, release_date, discount_rate, sales_quantity, stock_quantity, category_code, production_status)
+        product_info (product_code, product_name, origin_cost, release_date, discount_rate, sales_quantity,
+        stock_quantity, category_code, production_status)
         VALUES
-            (#{ productCode }, #{ productName }, #{ originCost }, #{ releaseDate }, #{ discountRate }, #{ salesQuantity }, #{ stockQuantity }, #{ categoryCode }, #{ productionStatus })
+        (#{ productCode }, #{ productName }, #{ originCost }, #{ releaseDate }, #{ discountRate }, #{ salesQuantity },
+        #{ stockQuantity }, #{ categoryCode }, #{ productionStatus })
     </insert>
 
     <!-- 6. 사용자가 수정을 원하는 데이터만 수정하도록 Dynamic Query를 활용한 쿼리를 작성하세요.
